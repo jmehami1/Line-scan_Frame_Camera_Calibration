@@ -1,0 +1,3 @@
+[submodule "ext_lib/mex_ChArUco_Pose"]
+	path = ext_lib/mex_ChArUco_Pose
+	url = https://github.com/jmehami1/mex_ChArUco_Pose.git

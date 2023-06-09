@@ -1,0 +1,51 @@
+# Parameters for use for line-scan_frame_camera_calibration
+
+# Show figures during execution (set to false to speed-up)
+display_on: false
+
+# Approximate translation in x and z direction to ensure optimisation does not reduce to mirror pose
+# translations are relative to the line-scan camera coordinate frame. Please see README.md for further details.
+t3_approximate: 0.05
+t1_approximate: -0.1
+
+# if the line-scan camera is mounted upside down, then this needs to be set to true.
+flip_linescan_img: false 
+
+# Frame camera that is used to acquire intrinsic parameters
+frame_camera_name: "l515"
+
+# number of readings until active calibration algorithm has considered to reached a steadystate in the calibration
+steadystate_readings: 6
+
+# minimum magnitude to eigenvalues (avoids having to deal with 0)
+minimum_eigen_value: 0.1
+
+# the eigenvalues which will only be considered by the algorithm
+# ["tx (m)", "ty (m)", "tz (m)", "rz (rad)", "ry (rad)", "rx (rad)", "fy (pixels)", "v0 (pixels)", "K1", "K2", "T1"]
+# Ignores eigenvalues for the distortion parameters
+eig_values_considered: [1,2,3,4,5,6,7,8]
+
+# the thresold for the summed normalised metric (should be zero to ensure the sum is greater than zero, which relates in an increase in information with the current images.)
+sum_eigen_threshold: 0
+
+
+# Naive calibration using all image pairs
+naive_calibration: false
+
+# algorithm of choice for solving the optimisation
+#   1 - Levenberg-Marquardt (default). Does not require constraints but could
+#     result in local minimum
+#   2 - Trust-Region-Reflective. Requires constraints to work well
+algorithm: 2
+
+# Upper and lower bounds for trust-region-reflective algorithm
+# [tx, ty, tz, qw, qx, qy, qz, fy, v0, K1, K2, P2]
+lower_bounds: [-0.3, -0.3, -0.3, -1, -1, -1, -1, 600, 140, -9999999, -9999999, -9999999]
+upper_bounds: [0.3, 0.3, 0.3, 1, 1, 1, 1, 1000, 180, 9999999, 9999999, 9999999]
+
+
+# Skip calculating covariances (only skips if naiveCalibration is true)
+skip_covariance: true
+
+# STD of error in pixel measurements for both cameras
+std_pixel_error: 1
