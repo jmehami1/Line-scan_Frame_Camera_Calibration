@@ -299,6 +299,8 @@ for i = 1:numImages
     end
 end
 
+[~, numPixLS] = size(curImg);
+
 %remove all the data from the images that we could not find linescan
 %lines for.
 goodImages = goodImages(1:numGoodImg);
@@ -651,7 +653,7 @@ axis equal;
 view([-115,-55]);
 
 %image size (vertical line of pixels)
-rowsHyp = 320;
+rowsHyp = numPixLS;
 colsHyp = 1;
 
 %intrinsic object for the linescan camera
@@ -754,20 +756,20 @@ resultFileName = fullfile(resultDir, 'camera_system_optimised_parameters.mat');
 
 if ~exist(resultFileName, 'file')
     if optmAlgStruct.skipCov
-        save(resultFileName, 'linescan_Opt_Param', 'numOpt');
+        save(resultFileName, 'linescan_Opt_Param', 'numOpt', 'numPixLS');
     else
-        save(resultFileName, 'linescan_Opt_ParamErr', 'linescan_Opt_Param', 'rankFIM', 'eigFIM', 'numOpt', 'sumEigRelChange');
+        save(resultFileName, 'linescan_Opt_ParamErr', 'linescan_Opt_Param', 'rankFIM', 'eigFIM', 'numOpt', 'sumEigRelChange', 'numPixLS');
     end
 else
     userIn = input('Overwrite results Y/N?', 's');
 
     if lower(userIn) == 'y'
         if optmAlgStruct.skipCov
-            save(resultFileName, 'linescan_Opt_Param', 'numOpt');
+            save(resultFileName, 'linescan_Opt_Param', 'numOpt', 'numPixLS');
         elseif naiveCalibration
-            save(resultFileName, 'linescan_Opt_Param', 'numOpt', 'linescan_Opt_ParamErr');
+            save(resultFileName, 'linescan_Opt_Param', 'numOpt', 'linescan_Opt_ParamErr', 'numPixLS');
         else
-            save(resultFileName, 'linescan_Opt_ParamErr', 'linescan_Opt_Param', 'rankFIM', 'eigFIM', 'numOpt', 'sumEigRelChange');
+            save(resultFileName, 'linescan_Opt_ParamErr', 'linescan_Opt_Param', 'rankFIM', 'eigFIM', 'numOpt', 'sumEigRelChange', 'numPixLS');
         end
     end
 end
