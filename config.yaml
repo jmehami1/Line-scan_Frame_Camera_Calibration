@@ -1,4 +1,4 @@
-# Parameters for use for line-scan_frame_camera_calibration
+# Parameters for line-scan_frame_camera_calibration
 
 # Show figures during execution (set to false to speed-up)
 display_on: false
@@ -9,10 +9,7 @@ t3_approximate: 0.05
 t1_approximate: -0.1
 
 # if the line-scan camera is mounted upside down, then this needs to be set to true.
-flip_linescan_img: false 
-
-# Frame camera that is used to acquire intrinsic parameters
-frame_camera_name: "l515"
+flip_linescan_img: true 
 
 # number of readings until active calibration algorithm has considered to reached a steadystate in the calibration
 steadystate_readings: 6
@@ -28,9 +25,8 @@ eig_values_considered: [1,2,3,4,5,6,7,8]
 # the thresold for the summed normalised metric (should be zero to ensure the sum is greater than zero, which relates in an increase in information with the current images.)
 sum_eigen_threshold: 0
 
-
 # Naive calibration using all image pairs
-naive_calibration: false
+naive_calibration: true
 
 # algorithm of choice for solving the optimisation
 #   1 - Levenberg-Marquardt (default). Does not require constraints but could
@@ -43,9 +39,22 @@ algorithm: 2
 lower_bounds: [-0.3, -0.3, -0.3, -1, -1, -1, -1, 600, 140, -9999999, -9999999, -9999999]
 upper_bounds: [0.3, 0.3, 0.3, 1, 1, 1, 1, 1000, 180, 9999999, 9999999, 9999999]
 
-
 # Skip calculating covariances (only skips if naiveCalibration is true)
 skip_covariance: true
 
 # STD of error in pixel measurements for both cameras
 std_pixel_error: 1
+
+# The dimensions of the ArUco triangle pattern used to calibrate the line-scan and frame camera system
+# All dimensions are in metres (m)
+numLines: 8
+XTriWidth: 0.05
+YTriHeight: 0.1
+Xoffset: 0.039
+Yoffset: 0.161
+ArucoSideLength: 0.035
+SeparationLength: 0.013
+NumRows: 8
+NumCols: 6
+
+

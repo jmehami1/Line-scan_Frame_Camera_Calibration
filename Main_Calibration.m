@@ -28,25 +28,18 @@ run(fullfile('ext_lib', 'rvctools', 'startup_rvc.m'));
 addpath(genpath(fullfile('ext_lib', 'yamlmatlab-master')));
 
 %parameter file
-paramFile = fullfile('parameter_files', 'calibration.yaml');
-if ~exist(paramFile, 'file')
-    error("YAML parameter file not found");
-end
-
-%pattern specifications
-patternFile = fullfile('parameter_files', 'pattern.yaml');
-if ~exist(patternFile, 'file')
-    error("YAML file containing pattern parameters not found");
+configFile = fullfile('config.yaml');
+if ~exist(configFile, 'file')
+    error("YAML config file not found");
 end
 
 
 %% Load parameters
 
-disp("Loading calibration parameters...");
+disp("Loading configuration parameters...");
 
-paramYaml = yaml.ReadYaml(paramFile);
+paramYaml = yaml.ReadYaml(configFile);
 displayOn = paramYaml.display_on;
-frameCamera = paramYaml.frame_camera_name;
 steadstate_readings = paramYaml.steadystate_readings; %number of readings until active calibration algorithm has considered to reached a steadystate in the calibration
 min_eigen_value = paramYaml.minimum_eigen_value; %minimum magnitude to eigenvalues (avoids having to deal with 0)
 eigRange = cell2mat(paramYaml.eig_values_considered); %the eigenvalues which will only be considered by the algorithm
@@ -75,22 +68,27 @@ upperBounds = cell2mat(paramYaml.upper_bounds);
 
 %Read YAML file containing the pattern specifications
 % All dimensions are in metres
-pattern = yaml.ReadYaml(patternFile);
+pattern = paramYaml;
 numLines = pattern.numLines;
+xNumMarker = pattern.NumCols;
+yNumMarker = pattern.NumRows;
+arucoLen = pattern.ArucoSideLength;
+sepLen = pattern.SeparationLength;
 
 %% Check files and data directories are correct
 
 disp("Checking files and directories...");
 
-
-%frame camera intrinsic parameters file
-frameIntrFile = fullfile('frame_camera_intrinsic', [frameCamera, '.mat']);
-if ~exist(frameIntrFile, 'file')
-    error("Frame camera intrinsic parameters not found for %s", frameCamera);
-end
-
 %Get source directory where images are located and results will be saved
 srcDir = uigetdir(['~', filesep], 'Provide source directory where images are located?');
+
+%frame camera intrinsic parameters file
+frameIntrFile = fullfile(srcDir, 'frame_camera_intrinsic.mat');
+if ~exist(frameIntrFile, 'file')
+    warning("Frame camera intrinsic MAT file not found in %s\nPlease provide location of MAT file...", frameIntrFile);
+    [file,path] = uigetfile(srcDir);
+    frameIntrFile = fullfile(path, file);
+end
 
 lsDir = fullfile(srcDir, 'Line-scan');
 frameDir = fullfile(srcDir, 'Frame');
@@ -118,7 +116,6 @@ numImages = numImagesLS;
 
 % Results directory
 resultDir = fullfile(srcDir, 'calibration_results');
-%create results directory if not made
 if ~exist(resultDir, 'dir')
     mkdir(resultDir);
 end
@@ -127,35 +124,17 @@ end
 
 disp("Loading frame camera intrinsic parameters...");
 
-load(frameIntrFile); %Load the intrinsic parameters of the camera
-
-%extract focal point components in pixels
-fx = cameraParams.FocalLength(1);
-fy = cameraParams.FocalLength(2);
-
-%optical centre of camera in pixelstrue
-u0 = cameraParams.PrincipalPoint(1);
-v0 = cameraParams.PrincipalPoint(2);
+[cameraParamFrame, kFrame, distRad, distTan, imageSize, distCoefCV, fx, fy, u0, v0, std_f, std_u0v0] = loadcameraintrinsic(frameIntrFile);
 
 %array of intrinsic parameters that introduce noise (assume noise in
 %intrinsic distortion is zero)
 thetaFrameintr = [fx, fy, u0, v0];
 
-%distortion parameters
-distRad = cameraParams.RadialDistortion;
-distTan = cameraParams.TangentialDistortion;
-distCoefCV = [distRad(1:2), distTan, distRad(3)]; %array of distortion coefficients in opencv format
-
 if ~optmAlgStruct.skipCov
-    if exist('estimationErrors', 'var')
-        %extract the error in the intrinsic parameters of the frame camera
-        std_f = estimationErrors.IntrinsicsErrors.FocalLengthError;
-        std_u0v0 = estimationErrors.IntrinsicsErrors.PrincipalPointError;
-        stdFrameIntr = [std_f,std_u0v0];
-    else
-        %assume no error in frame camera intrinsic
-        stdFrameIntr = zeros(1,4);
-    end
+    stdFrameIntr = [std_f,std_u0v0];
+else
+    %assume no error in frame camera intrinsic
+    stdFrameIntr = zeros(1,4);
 end
 
 %% Load images for both cameras
@@ -168,7 +147,7 @@ imagesFrame = cell(1,numImages);
 
 % Load all images
 for i = 1:numImages
-    imagesFrame{i} = undistortImage(imread(fullfile(frameDir, ['img', num2str(i),'.png'])), cameraParams);
+    imagesFrame{i} = undistortImage(imread(fullfile(frameDir, ['img', num2str(i),'.png'])), cameraParamFrame);
     imagesLS{i} = imread(fullfile(lsDir, ['hs', num2str(i),'.png']));
 end
 
@@ -179,17 +158,6 @@ frameImgSize = frameImgSize(1:2);
 %% Get pose of the plane using the ArUco pattern
  
 disp("Estimating pose of Aruco board...");
-
-%ChArUco pattern size
-xNumMarker = pattern.NumCols;
-yNumMarker = pattern.NumRows;
-arucoLen = pattern.ArucoSideLength;
-sepLen = pattern.SeparationLength;
-numMarkersExp = pattern.NumberExpectedMarker;
-
-%intrinsic object for the RGB camera
-frameIntrinsic = cameraIntrinsics(thetaFrameintr(1:2),thetaFrameintr(3:4), frameImgSize);
-kFrame = frameIntrinsic.IntrinsicMatrix';
 
 %store all the poses of each found pattern
 extPosePattern = zeros(4,4,numImages);
@@ -207,7 +175,7 @@ markerCornerCell = ArUcoBoardMarkerCornersCell(0, xNumMarker, yNumMarker, arucoL
 
 % Estimate extrinsic pose using ArUco board
 for imgLoop = 1:numImages
-    [rotMat, trans, found, imgDisp] = ArucoPosEst(imagesFrame{imgLoop}, markerCornerCell, cameraParams, false);
+    [rotMat, trans, found, imgDisp] = ArucoPosEst(imagesFrame{imgLoop}, markerCornerCell, cameraParamFrame, false);
 
     if ~found
         continue;

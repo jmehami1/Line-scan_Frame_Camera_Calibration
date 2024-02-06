@@ -49,6 +49,7 @@
 - [Submodule](#submodule)
 - [Calibration Board](#calibration-board)
 - [Calibration Images](#calibration-images)
+- [Data Directory](#data-directory)
 - [Frame Camera Intrinsic](#frame-camera-intrinsic)
 - [Setup Steps](#setup-steps)
 - [Calibration Configuration](#calibration-configuration)
@@ -114,7 +115,7 @@ git submodule update
 
 The calibration is performed using a pattern with known triangles on an ArUco board as shown below. The triangles provide feature points for the line-scan camera. **All triangles must be visible in the FOV of the line-scan camera in order to properly calibrate.** The ArUco board markers are used by the frame camera to acquire the board's pose automatically using OpenCV functionality (further details of the ArUco board estimation can be found in the [README](./ext_lib/mex_ChArUco_Pose/README.md) of submodule).
 
-An A3 PDF version of the board can be found in [calibration_board](./calibration_board) and its corresponding dimension measurements which are used in the calibration are saved in the file [pattern.yaml](./parameter_files/pattern.yaml)
+An A3 PDF version of the board can be found in [calibration_board](./calibration_board) and its corresponding dimension measurements which are used in the calibration are saved in the file [config.yaml](./config.yaml)
 
 <p align="center">
     <img align="center" src="docs/images/pattern_aruco_triangle_board.png" alt="ArUco triangle pattern for calibrating line-scan camera" width="30%" />
@@ -128,10 +129,11 @@ When capturing calibration images, the board should be moved and rotated such th
     <img align="center" src="docs/images/aruco_pose_estimation.png" alt="Estimated pose of ArUco board" width="49%"/>
     <img align="center" src="docs/images/line-scan_image_lines_detection.png" alt="Detected line features in the line-scan image" width="49%"/>
 </div>
-
 <br>
 
-The calibration images for both cameras should organised as follows:
+## Data Directory
+
+The calibration data should be organised as follows:
 
 ```plaintext
 Calibration_Data_directory
@@ -143,6 +145,7 @@ Calibration_Data_directory
 	├── hs1.png
 	├── hs2.png
 	└── ...
+├── frame_camera_intrinsic.mat
 └── calibration_results (generated after successfully running calibration script)
 ```
 
@@ -152,7 +155,7 @@ Calibration_Data_directory
 
 ## Frame Camera Intrinsic
 
-The intrinsic parameters of your Frame (RGB) camera must be **calibrated prior** to performing this calibration. This can be done through checkerboard calibration using MATLAB's calibration [app](https://au.mathworks.com/help/vision/ref/cameracalibrator-app.html). The saved intrinsic parameters need to be stored in the directory `frame_camera_intrinsic`  as `NAME_OF_CAMERA.mat` . Inside of the MAT file is a MATLAB `cameraParameters` object with the name **cameraParams**.
+The intrinsic parameters of your Frame (RGB) camera must be **calibrated prior** to performing this calibration. This can be done through checkerboard calibration using MATLAB's calibration [app](https://au.mathworks.com/help/vision/ref/cameracalibrator-app.html). The saved intrinsic parameters should be stored with that data with the filename `frame_camera_intrinsic.mat` . Inside of the MAT file is a MATLAB [cameraParameters](https://mathworks.com/help/vision/ref/cameraparameters.html) object with the name **cameraParams**.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -176,7 +179,7 @@ The intrinsic parameters of your Frame (RGB) camera must be **calibrated prior**
    make -j
    ```
 
-3. Edit the calibration configuration file [calibration.yaml](./parameter_files/calibration.yaml) if needed. Details of the calibration configuration are described in the next section.
+3. Edit the calibration configuration file [config.yaml](./config.yaml) as needed. Details of the calibration configuration are described in the next section.
 
 4. Run calibration script `Main_Calibration.m`  Pass the directory location of the extracted images  `Images/*NAME OF BAG*/`  which contains the `Frame` and `Line-scan` directories.
 
@@ -186,7 +189,7 @@ The intrinsic parameters of your Frame (RGB) camera must be **calibrated prior**
 
 ## Calibration Configuration
 
-Configuration parameters found in the [calibration.yaml](./parameter_files/calibration.yaml) file.
+Configuration parameters found in the [config.yaml](./config.yaml) file.
 
 | Flags                | Description                                                  |
 | -------------------- | ------------------------------------------------------------ |
@@ -194,7 +197,6 @@ Configuration parameters found in the [calibration.yaml](./parameter_files/calib
 | t1_approximate       | The approximate distance from Resonon to RGB camera along the positive x-axis of Resonon *(see below for further details)* |
 | t3_approximate       | The approximate distance from Resonon to RGB camera along the positive z-axis of Resonon *(see below for further details)* |
 | flip_linescan_img    | TRUE if the x-axis of the pattern is in the opposite direction to the y-axis of the Resonon |
-| frame_camera_name    | The name of the frame camera. This name must match the filename of the frame camera intrinsic .mat file |
 | naive_calibration    | TRUE/FALSE runs naive calibration with all images, else runs active algorithm |
 | algorithm            | Algorithm for solving the optimisation. <br />1 - Levenberg-Marquardt (default)  <br />2 -Trust-Region-Reflective<br />The trust-region-reflective generally will result in proper calibration parameters as it takes in constraints that will ensure the intrinsics of the hyperspectral camera are in proper range. (These should generally remain fixed) |
 | steadystate_readings | Stopping criteria for the active algorithm. Minimum number of consecutive optimisations until steady-state is reached. Checks the sum of the relative change in eigenvalues for each optimisation (referred to as summed normalised metric). |
@@ -237,6 +239,7 @@ The final optimised calibration parameters can be found in the matrix **linescan
 - [ ] Read in frame camera intrinsic parameters from data folder or Rosbag
 - [ ] Allow for passing in Rosbag of images
 - [ ] Allow for any image naming schemes 
+- [ ] Automatic method to set flip_linescan_img to true/false. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
