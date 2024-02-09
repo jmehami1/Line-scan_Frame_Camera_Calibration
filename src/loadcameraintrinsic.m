@@ -3,6 +3,21 @@ function [cameraParams, K, distRad, distTan, imageSize, distCoefCV, fx, fy, u0, 
 %stored inside of a MAT file.
 % INPUTS:
 %       matFile - MAT file with cameraParameters structure
+% OUTPUTS:
+%       cameraParams - MATLAB cameraParameter object
+%       K - Intrinsic matrix. Lower triangle form [fx, 0, 0; 0, fy, 0; u0, v0, 1]
+%       distRad - Radial distortion parameters [K1, K2, K3]
+%       distTan - Tangential distortion parameters [T1, T2]
+%       imageSize - Size of the images in pixels[rows, columns]
+%       distCoefCV - Distortion parameters in OpenCV format [K1, K2, T1, T2, K3]
+%       fx - Focal length along x-axis measured in pixels
+%       fy - Focal length along y-axis measured in pixels
+%       u0 - Optical centre along u-direction (rows) in pixels
+%       v0 - Optical centre along v-direction (columns) in pixels
+%       std_f - STD error in focal lengths. Assumed to be independent zero-mean Gaussian variables
+%       std_u0v0 - STD error in focal lengths. Assumed to be independent zero-mean Gaussian variables
+%
+% Author: Jasprabhjit Mehami
 
 if ~exist(matFile, 'file')
     error("%s not found", matFile);

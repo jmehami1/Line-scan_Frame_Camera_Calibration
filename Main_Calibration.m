@@ -419,13 +419,13 @@ lsPointsPatCoordsERR = lsPointsPatCoordsERR(orderImg);
 
 %trust region algorithm
 optmAlgStruct.optOptionsTrust = optimoptions('lsqnonlin', 'Algorithm', 'trust-region-reflective', 'SpecifyObjectiveGradient',true, 'CheckGradients', false, ...
-    'MaxIterations', 10000, 'FunctionTolerance',1e-7, 'MaxFunctionEvaluations',1000000000, 'StepTolerance',1e-6, 'OptimalityTolerance', 1e-7);
+    'MaxIterations', 10000, 'FunctionTolerance',1e-7, 'MaxFunctionEvaluations',1000000000, 'StepTolerance',1e-6, 'OptimalityTolerance', 1e-7, 'UseParallel', true);
 optmAlgStruct.optOptionsTrust.Display = 'none';
 
 %levenberg-marquardt
 optmAlgStruct.optOptionsLeven = optimoptions('lsqnonlin', 'Algorithm', 'levenberg-marquardt', 'SpecifyObjectiveGradient',true, 'CheckGradients', false, ...
     'MaxIterations', 1000, 'FunctionTolerance',1e-5, 'MaxFunctionEvaluations',1000000000, 'StepTolerance',1e-6,'ScaleProblem', ...
-    'jacobian', 'InitDamping', 1, 'FiniteDifferenceType', 'central', 'UseParallel', false);
+    'jacobian', 'InitDamping', 1, 'FiniteDifferenceType', 'central', 'UseParallel', true);
 optmAlgStruct.optOptionsLeven.Display = 'none';
 
 optmAlgStruct.LBounds = lowerBounds;
@@ -600,6 +600,10 @@ v0 = caliParam(8);
 t = caliParam(1:3);
 rotEul = caliParam(4:6);
 rotMat = eul2rotm(rotEul, 'ZYX');
+
+if (fy <= 0) || (v0 <= 0)
+    error("Calibration was not sucessful as the estimated f_y or v_0 were not valid. These parameters must be positive values greater than zero.")
+end
 
 %extrinsic of line-scan (frame camera coordinate frame w.r.t line-scan
 %camera coordinate frame

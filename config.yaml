@@ -5,7 +5,7 @@ display_on: false
 
 # Approximate translation in x and z direction to ensure optimisation does not reduce to mirror pose
 # translations are relative to the line-scan camera coordinate frame. Please see README.md for further details.
-t3_approximate: 0.05
+t3_approximate: 0.01
 t1_approximate: -0.1
 
 # if the line-scan camera is mounted upside down, then this needs to be set to true.
@@ -26,7 +26,7 @@ eig_values_considered: [1,2,3,4,5,6,7,8]
 sum_eigen_threshold: 0
 
 # Naive calibration using all image pairs
-naive_calibration: true
+naive_calibration: false
 
 # algorithm of choice for solving the optimisation
 #   1 - Levenberg-Marquardt (default). Does not require constraints but could

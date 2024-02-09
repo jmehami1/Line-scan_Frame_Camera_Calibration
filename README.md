@@ -54,6 +54,7 @@
 - [Setup Steps](#setup-steps)
 - [Calibration Configuration](#calibration-configuration)
 - [Initial Guesses](#initial-guesses)
+- [Flipping Line-scan Image](#flipping-line-scan-image)
 - [Results](#results)
 - [TODO](#todo)
 - [License](#license)
@@ -96,6 +97,7 @@ The observability is an important aspect in this calibration as it is common to 
 - MATLAB 2020a or higher (Tested with 2021b)
 - GCC 7.0 or higher (Tested with 7.5.0)
 - OpenCV 4.0 or higher
+- CMake 3.10 or higher
 
 ## Submodule
 
@@ -123,7 +125,7 @@ An A3 PDF version of the board can be found in [calibration_board](./calibration
 
 ## Calibration Images
 
-When capturing calibration images, the board should be moved and rotated such that there are variations in the set of calibration images. Atleast two ArUco markers should be present in the frame camera image to estimate the board pose (see [PnP algorithm](https://en.wikipedia.org/wiki/Perspective-n-Point)) and eight line features should be detected in the line-scan image as shown below.
+When capturing calibration images, the board should be moved and rotated such that there are variations in the set of calibration images. Atleast two ArUco markers should be present in the frame camera image to estimate the board pose (see [PnP algorithm](https://en.wikipedia.org/wiki/Perspective-n-Point)) and eight line features should be detected in the line-scan image as shown below. The line-scan image may need to be flipped to match the order of the lines on the board *(see [below](#initial-guesses) for further details)*.
 
 <div style="display:flex;justify-content:center;">
     <img align="center" src="docs/images/aruco_pose_estimation.png" alt="Estimated pose of ArUco board" width="49%"/>
@@ -194,9 +196,9 @@ Configuration parameters found in the [config.yaml](./config.yaml) file.
 | Flags                | Description                                                  |
 | -------------------- | ------------------------------------------------------------ |
 | display_on           | TRUE/FALSE Turns the intermediate visualisations on/off. Turn off to speed up processing |
-| t1_approximate       | The approximate distance from Resonon to RGB camera along the positive x-axis of Resonon *(see below for further details)* |
-| t3_approximate       | The approximate distance from Resonon to RGB camera along the positive z-axis of Resonon *(see below for further details)* |
-| flip_linescan_img    | TRUE if the x-axis of the pattern is in the opposite direction to the y-axis of the Resonon |
+| t1_approximate       | The approximate distance from Resonon to RGB camera along the positive x-axis of Resonon *(see [below](#initial-guesses) for further details)* |
+| t3_approximate       | The approximate distance from Resonon to RGB camera along the positive z-axis of Resonon *(see [below](#initial-guesses) for further details)* |
+| flip_linescan_img    | TRUE if the x-axis of the pattern is in the opposite direction to the y-axis of the Resonon *(see [below](#flipping-line-scan-image) for further details)*|
 | naive_calibration    | TRUE/FALSE runs naive calibration with all images, else runs active algorithm |
 | algorithm            | Algorithm for solving the optimisation. <br />1 - Levenberg-Marquardt (default)  <br />2 -Trust-Region-Reflective<br />The trust-region-reflective generally will result in proper calibration parameters as it takes in constraints that will ensure the intrinsics of the hyperspectral camera are in proper range. (These should generally remain fixed) |
 | steadystate_readings | Stopping criteria for the active algorithm. Minimum number of consecutive optimisations until steady-state is reached. Checks the sum of the relative change in eigenvalues for each optimisation (referred to as summed normalised metric). |
@@ -221,6 +223,20 @@ Note that the extrinsic transformation describes the pose of the frame camera ax
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Flipping Line-scan Image
+
+Depending on the orientation of the calibration board, the line-scan camera images may need to be flipped horizontally so that the order of the feature points in the image correspond to the order on the board. You will need to manually set the flag `flip_linescan_img` as shown [above](#calibration-configuration).
+This will depend on the setup of the cameras but the general guideline to set the flag to true, is that the x-axis of the pattern needs to to be in the opposite direction to the y-axis of the camera.
+
+For my setup, the following examples show when the line-scan image is flipped and not flipped respectively:
+
+<p float="center">
+<img align="top" src="./docs/images/line-scan_image_flipped.png" alt="Successful calibration of cameras where line-scan images needed to be flipped" width="49%"/>
+<img align="top" src="./docs/images/line-scan_image_not_flipped.png" alt="Successful calibration of cameras where line-scan images did not need to be flipped" width="49%"/>
+</p>
+
+
+
 ## Results
 
 Results are saved as a MAT file called `optimised_parameters.mat` which stores all the necessary data after calibration. Load this file into MATLAB.
@@ -229,7 +245,11 @@ The final optimised calibration parameters can be found in the matrix **linescan
 
 `numOpt` tells you how many optimisation iterations were performed. In each iteration of the active algorithm a new image gets added, so therefore `numOpt + 1` is the number of images that are used in the final optimisation.
 
+Below is the final output figure showing the calibrated cameras and one instance of the pattern with the projected line-scan view-line.
 
+<p align="center">
+<img align="top" src="./docs/images/sucessful_calibration_result.png" alt="Sucessful calibration result showing cameras, pattern and projected line" width="49%" />
+</p>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
