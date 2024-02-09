@@ -5,7 +5,7 @@ function [cameraParams, K, distRad, distTan, imageSize, distCoefCV, fx, fy, u0, 
 %       matFile - MAT file with cameraParameters structure
 % OUTPUTS:
 %       cameraParams - MATLAB cameraParameter object
-%       K - Intrinsic matrix. Lower triangle form [fx, 0, 0; 0, fy, 0; u0, v0, 1]
+%       K - Intrinsic matrix. Upper triangle form [fx, 0, u0; 0, fy, v0; 0, 0, 1]
 %       distRad - Radial distortion parameters [K1, K2, K3]
 %       distTan - Tangential distortion parameters [T1, T2]
 %       imageSize - Size of the images in pixels[rows, columns]
